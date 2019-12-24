@@ -1,22 +1,8 @@
-#include <bits/stdc++.h>
+#include "min-heap.hpp"
+#include <cstdint>
+#include <limits>
 
 using namespace std;
-
-template <typename T> class MinHeap {
-public:
-  MinHeap(initializer_list<T> list);
-  void insert(T key);
-  T top();
-  T pop();
-  void decrease(size_t index, T newValue);
-  void erase(size_t index);
-
-private:
-  vector<T> arr;
-
-  void bubbleUp(size_t index);
-  void bubbleDown(size_t index);
-};
 
 template <typename T> void MinHeap<T>::bubbleUp(size_t index) {
   if (index == 0)
@@ -81,11 +67,4 @@ template <typename T> void MinHeap<T>::erase(size_t index) {
   pop();
 }
 
-int main() {
-  MinHeap<int64_t> priorityQueue{40, 30, 10, 100, 50, 15};
-  priorityQueue.insert(40);
-  priorityQueue.erase(0);
-  priorityQueue.decrease(0, 5);
-  cout << priorityQueue.pop() << " " << priorityQueue.top() << endl;
-  return EXIT_SUCCESS;
-}
+template <typename T> bool MinHeap<T>::empty() { return arr.size() == 0; }
