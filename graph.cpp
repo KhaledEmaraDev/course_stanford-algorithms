@@ -8,10 +8,14 @@ public:
   void addVertex();
   void addEdge(T v1, T v2);
   size_t shortestPath(T sourceVertex, T destinationVertex);
-  void DFS(T sourceVertex);
+  // strongly connected components
+  void SCC();
 
 private:
   vector<list<T>> vertices;
+  Graph<T> transpose();
+  void fillOrder(T sourceVertex, vector<bool> &visited, stack<T> &order);
+  void DFS(T sourceVertex, vector<bool> &visited);
 };
 
 template <typename T> Graph<T>::Graph(size_t num_vertices) {
@@ -24,26 +28,16 @@ template <typename T> void Graph<T>::addVertex() {
 
 template <typename T> void Graph<T>::addEdge(T v1, T v2) {
   this->vertices[v1].push_back(v2);
-  // this->vertices[v2].push_back(v1);
 }
 
-template <typename T> void Graph<T>::DFS(T sourceVertex) {
-  vector<bool> visited(this->vertices.size());
-  stack<T> stack;
-  stack.push(sourceVertex);
+template <typename T>
+void Graph<T>::DFS(T sourceVertex, vector<bool> &visited) {
   visited[sourceVertex] = true;
+  cout << sourceVertex << " ";
 
-  while (!stack.empty()) {
-    auto vertex = stack.top();
-    cout << " --> " << vertex;
-    stack.pop();
-    for (auto edge : this->vertices[vertex]) {
-      if (!visited[edge]) {
-        stack.push(edge);
-        visited[edge] = true;
-      }
-    }
-  }
+  for (auto edge : vertices[sourceVertex])
+    if (!visited[edge])
+      DFS(edge, visited);
 }
 
 template <typename T>
@@ -75,18 +69,56 @@ size_t Graph<T>::shortestPath(T sourceVertex, T destinationVertex) {
   return ~0;
 }
 
+template <typename T> Graph<T> Graph<T>::transpose() {
+  Graph<T> newGraph(vertices.size());
+  for (auto v = 0; v < vertices.size(); v++) {
+    for (auto edge : vertices[v]) {
+      newGraph.addEdge(edge, v);
+    }
+  }
+  return newGraph;
+}
+
+template <typename T>
+void Graph<T>::fillOrder(T sourceVertex, vector<bool> &visited,
+                         stack<T> &order) {
+  visited[sourceVertex] = true;
+
+  for (auto edge : vertices[sourceVertex])
+    if (!visited[edge])
+      fillOrder(edge, visited, order);
+
+  order.push(sourceVertex);
+}
+
+template <typename T> void Graph<T>::SCC() {
+  vector<bool> visited(vertices.size());
+  stack<T> order;
+  for (int v = 0; v < vertices.size(); v++)
+    if (!visited[v])
+      fillOrder(v, visited, order);
+
+  Graph<T> newGraph = transpose();
+  fill(visited.begin(), visited.end(), false);
+
+  while (!order.empty()) {
+    auto vertex = order.top();
+    order.pop();
+
+    if (!visited[vertex]) {
+      newGraph.DFS(vertex, visited);
+      cout << endl;
+    }
+  }
+}
+
 int main() {
-  Graph<int64_t> graph(8);
-  graph.addEdge(0, 1);
+  Graph<int64_t> graph(5);
+  graph.addEdge(1, 0);
+  graph.addEdge(0, 2);
+  graph.addEdge(2, 1);
   graph.addEdge(0, 3);
-  graph.addEdge(1, 2);
   graph.addEdge(3, 4);
-  graph.addEdge(3, 7);
-  graph.addEdge(4, 5);
-  graph.addEdge(4, 6);
-  graph.addEdge(4, 7);
-  graph.addEdge(5, 6);
-  graph.addEdge(6, 7);
-  cout << graph.shortestPath(0, 7) << endl;
+  graph.SCC();
   return EXIT_SUCCESS;
 }
